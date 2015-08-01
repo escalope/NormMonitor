@@ -1,0 +1,203 @@
+/*
+    Copyright (C) 2015 Jorge Gomez Sanz
+
+    This file is part of NormMonitor a monitoring solution system for PHAT infrastructure, 
+    and availabe at https://github.com/escalope/NormMonitor. 
+
+    The NormMonitor is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
+
+    INGENIAS Agent Framework is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with NormMonitor; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ */
+
+package sociaal;
+
+dialect "mvel"
+
+import jade.lang.acl.ACLMessage;
+import jade.domain.introspection.Event;
+import phat.agents.AgentPHATEvent;
+import phat.body.BodyUtils.BodyPosture;
+import phat.world.MonitorEventQueue;
+import phat.world.MonitorEventQueueImp;
+import phat.world.PHATCalendar;
+import sociaal.*;
+import sociaal.ontology.*;
+import sociaal.*;
+
+rule "init"
+when
+then
+	insert(new Partner("system"));
+	NormPerformanceDisplay.getInstance().addPartner("system");
+end
+
+
+rule "Clean working memory. Remove events older than 2 seconds"
+when
+		$f2: AgentPHATEvent()
+		$f1: AgentPHATEvent(time-$f2.getTime()>10000)
+then
+		retract( $f2 ) ;
+		System.out.println("cleaning too old fact"+$f2.toString);
+end
+
+/*******************************************************/
+// Norm activation
+/*******************************************************/
+
+rule "activate: a person cannot be on the ground for more than five seconds"
+when 
+	$otg:OnTheGround()
+then
+	insertLogical(new PunishOnTheGround("NoFalls","system",this));
+	NormPerformanceDisplay.getInstance().addViolation("eNoFalls","system");	
+end
+
+
+rule "activate: if there is someone at the ground, and there are other partners, they must aid"
+when 
+	$gnd: OnTheGround()
+	$aidee: Partner(!$gnd.getName().equals(id))
+	not ($na: Aiding($na.getAided().equals($gnd.getName()), $na.getAidee().equals($aidee.getId())))
+
+then
+	insertLogical(new NotAidingTheFallen("NotAiding",$aidee.getId(),this));
+	NormPerformanceDisplay.getInstance().addViolation("Aiding",$aidee.getId());
+end
+
+rule "activate: to keep patient's autonomy, no unnecesary assistance will be given"
+when 
+	$a:Assisting()
+	UnnecesaryAction($a.getAssisting()==assisting, assisted==$a.getAssisted())
+then
+	insertLogical(new UnnecesaryActionsPerformed("UnnecesaryAssistance",$a.getAssisting(),this));
+	NormPerformanceDisplay.getInstance().addViolation("UnnecesaryAssistance",$a.getAssisting());
+end
+
+/*******************************************************/
+// Punishment norms
+/*******************************************************/
+
+rule "punishment: if a punishment norm holds after with the periodicity indicated by the norm"
+	when 
+		$fn: PunishmentNorm()
+		$te: PerformPunishment(prule==$fn) 
+	then
+		$fn.performPunishment();
+		NormPerformanceDisplay.getInstance().addPunishment($fn.getName(),$fn.getResponsible());
+end
+
+/*******************************************************/
+// transforming events into meaningful institutional facts
+/*******************************************************/
+rule "countas: Identify participating partners"
+ salience 100
+	when
+ 		$ae: AgentPHATEvent()
+ 		not ($pa: (Partner(id.equals($ae.id))))
+	then
+		insert( new Partner($ae.getId()) ) ;
+		NormPerformanceDisplay.getInstance().addPartner($ae.getId());
+end
+
+rule "countas: Identify participating agents"
+ salience 100
+	when
+ 		$c1 : ACLMessage()
+ 		not ($pa: (AgentPartner(id.equals($c1.sender.getLocalName()))))		
+	then
+		insert( new AgentPartner($c1.sender.getLocalName()) ) ;
+		NormPerformanceDisplay.getInstance().addPartner($c1.sender.getLocalName());
+end
+
+rule "countas: it is on the ground and did not stand up"
+ salience 100
+	when
+ 		$ae: AgentPHATEvent(bodyPosture == BodyPosture.Falling)
+ 		not ( $ai: AgentPHATEvent($ae.getId().equals($ai.getId()),bodyPosture != BodyPosture.Falling, $ae.getTime()<$ai.getTime()))
+	then
+		insertLogical( new OnTheGround($ae.getId()) ) ;
+end
+
+
+rule "countas: it is on the ground and there is no event in the last 10 secs that indicates the agent is going to aid"
+ salience 100
+	when
+ 		$ae:   AgentPHATEvent(getAided()!=null)		
+	then
+		insertLogical( new Aiding($ae.getId(),$ae.getAided()) ) ;
+end
+
+
+
+rule "countas: pressed channel"
+    salience 100
+    when
+        $c1 : ACLMessage(sender.getLocalName().startsWith("AndroidTVRemote1"), content.startsWith("C"))
+    then        
+        insertLogical(new Action($c1.getSender().getLocalName(),$c1.getContent(),"TV")); 
+end
+
+rule "countas: current course of action is going to be successful "
+ salience 100
+	when
+		//it means the course of action is going to be "success" while achieving 
+		//$ae.getActionMarker()
+ 		$ae:   AgentPHATEvent( isSuccess())		
+	then
+		insertLogical( new GoingToBeSuccessful($ae.getId(), $ae.getScope())) ;
+end
+
+rule "countas: current course of action is going to fail "
+ salience 100
+	when
+		// it means the course of action  is going to be "failed"  or has turned out a failure
+		// while achieving,getAided()!=null, $ae.getActionMarker()
+ 		$ae:   AgentPHATEvent( isFailure())		
+	then
+		insertLogical( new GoingToFail($ae.getId() , $ae.getScope())) ;
+end
+
+rule "activation: tolerated failure "
+ salience 100
+	when
+ 		 		
+ 		$as:   Assisting()
+ 		$ae:   GoingToFail(getSubject().equals($as.getAssisted()),scope.equals($as.getScope()))
+ 		not (Action(responsible.equals($as.getAssisting()),  scope.equals($as.getScope())))
+	then
+		insertLogical( new ToleratedFailure("ToleratedFailure",$as.getAssisting(),this) ) ;
+end
+
+rule "activation: undesired interruption"
+ salience 100
+	when
+		$ac:   Action()
+ 		$ae:   GoingToBeSuccessful() 		
+ 		$as:   Assisting(assisting.equals($ac.getResponsible()), assisted.equals($ae.getSubject()),scope.equals($ac.getScope()))
+	then
+		insertLogical( new UndesiredInterruption("UndesiredInterruption",$as.getAssisting(),this) ) ;
+end
+
+/*rule "countas: evaluating messages"
+    salience 100
+    when
+        $c1 : ACLMessage(content.startsWith("sd1"))
+        $c2 : ACLMessage($c1.sender == sender,
+        		content.startsWith("sd2"), 
+        		postTimeStamp>$c1.postTimeStamp)
+    then        
+        System.out.println( "Recibido mensaje"); 
+        System.out.println( "Recibido mensaje "+$c1.postTimeStamp+ " :" +$c2.postTimeStamp);
+end*/
