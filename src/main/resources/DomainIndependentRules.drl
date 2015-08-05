@@ -1,0 +1,172 @@
+
+
+package sociaal;
+
+dialect "mvel"
+
+import jade.lang.acl.ACLMessage;
+import jade.domain.introspection.Event;
+import phat.agents.AgentPHATEvent;
+import phat.body.BodyUtils.BodyPosture;
+import phat.world.MonitorEventQueue;
+import phat.world.MonitorEventQueueImp;
+import phat.world.PHATCalendar;
+import sociaal.*;
+import sociaal.ontology.*;
+import sociaal.*;
+import sociaal.norms.*;
+
+rule "init"
+when
+then
+	insert(new Partner("system",0));
+	NormPerformanceDisplay.getInstance().addPartner("system");
+end
+
+
+rule "Clean working memory. Remove events older than 2 seconds"
+when
+		$f2: AgentPHATEvent()
+		$f1: AgentPHATEvent(time-$f2.getTime()>1200000)
+then
+		retract( $f2 ) ;
+		System.out.println("cleaning too old fact"+$f2.toString);
+end
+
+
+rule "Clean working memory. Remove time events"
+when
+		$f2: CurrentTime()
+		$f1: CurrentTime(time-$f2.getTime()>120000)
+then
+		retract( $f2 ) ;
+		System.out.println("cleaning too old fact"+$f2.toString);
+end
+
+
+/*******************************************************/
+// Norm violation detection
+/*******************************************************/
+
+rule "activation: tolerated failure "
+ salience 100
+	when
+ 		 		
+ 		$as:   Assisting()
+ 		$ae:   GoingToFail(getSubject().equals($as.getAssisted()))
+ 		not (ActionPerformed(responsible.equals($as.getAssisting()), scope.equals($as.getScope()),getTime()>$ae.getTime()))
+	then
+		insertLogical( new ToleratedFailure("ToleratedFailure",$as.getAssisting(),NormativeSystem.getElapsedSimTimeSeconds(),this) ) ;
+end
+
+rule "activation: undesired interruption"
+ salience 100
+	when
+		$ac:   ActionPerformed()
+ 		$ae:   GoingToBeSuccessful(Math.abs(getTime()-$ac.getTime())>10) 		
+ 		$as:   Assisting(assisting.equals($ac.getResponsible()), assisted.equals($ae.getSubject()),scope.equals($ac.getScope()),getTime()<$ac.getTime())
+	then
+		insertLogical( new UndesiredInterruption("UndesiredInterruption",$as.getAssisting(),NormativeSystem.getElapsedSimTimeSeconds(),this) ) ;
+end
+
+
+rule "violation display"
+when 
+	$fn: PunishmentNorm()
+then
+	NormPerformanceDisplay.getInstance().addViolation($fn);
+end
+
+/*******************************************************/
+// Punishment norms
+/*******************************************************/
+
+rule "punishment: if a punishment norm holds after with the periodicity indicated by the norm"
+	when 
+		$fn: PunishmentNorm()
+		$te: PerformPunishment(prule==$fn) 
+	then
+		$fn.performPunishment();
+		NormPerformanceDisplay.getInstance().addPunishment($fn);
+end
+
+/*******************************************************/
+// transforming events into meaningful institutional facts
+/*******************************************************/
+rule "countas: Identify participating partners"
+ salience 100
+	when
+ 		$ae: AgentPHATEvent()
+ 		not ($pa: (Partner(id.equals($ae.id))))
+	then
+		insert( new Partner($ae.getId(),$ae.getElapsedTime()) ) ;
+		NormPerformanceDisplay.getInstance().addPartner($ae.getId());
+end
+
+rule "countas: Identify participating agents"
+ salience 100
+	when
+ 		$c1 : ACLMessage()
+ 		not ($pa: (AgentPartner(id.equals($c1.sender.getLocalName()))))		
+	then
+		insert( new AgentPartner($c1.sender.getLocalName(),NormativeSystem.getElapsedSimTimeSeconds()))  ;
+		NormPerformanceDisplay.getInstance().addPartner($c1.sender.getLocalName());
+end
+
+
+rule "countas: action performed by an individual"
+ salience 100
+	when
+ 		$ae: AgentPHATEvent()
+	then
+		insertLogical( new ActionPerformed($ae.getId(),$ae.getActionType(),$ae.getElapsedTime(),$ae.isSuccessAction(),$ae.isFailureAction() )) ;
+end
+
+
+
+rule "countas: it is on the ground and did not stand up"
+ salience 100
+	when
+ 		$ae: AgentPHATEvent(bodyPosture == BodyPosture.Falling)
+ 		not ( $ai: AgentPHATEvent($ae.getId().equals($ai.getId()),bodyPosture != BodyPosture.Falling, $ae.getTime()<$ai.getTime()))
+	then
+		insertLogical( new OnTheGround($ae.getId()) ) ;
+end
+
+
+rule "countas: it is on the ground and there is no event in the last 10 secs that indicates the agent is going to aid"
+ salience 100
+	when
+ 		$ae:   AgentPHATEvent(getAided()!=null)		
+	then
+		insertLogical( new Aiding($ae.getId(),$ae.getAided(),$ae.getElapsedTime()) ) ;
+end
+
+
+rule "countas: current course of action is going to be successful "
+ salience 100
+	when
+		// the actions are going to be successful
+ 		$ae:   AgentPHATEvent( isSuccess())
+ 		// there is no posterior event that it is not successful or that it is a failure
+ 		not (AgentPHATEvent( isFailure() || !isSuccess(), getElapsedTime()>$ae.getElapsedTime(), $ae.getId().equals(getId())))
+ 		// there is no posterior action performed by the user that it is the succesful one
+ 		not (ActionPerformed($ae.getId().equals(getResponsible()),getTime()>$ae.getElapsedTime(),isSuccessAction()))
+	then
+		insertLogical( new GoingToBeSuccessful($ae.getId(), $ae.getScope(),$ae.getElapsedTime())) ;
+		System.out.println("insertado .......");
+end
+
+rule "countas: current course of action is going to fail "
+ salience 100
+	when
+		// the actions are going to be fail
+ 		$ae:   AgentPHATEvent( isFailure())
+ 		// there is no posterior event that it is successful or that it is not a failure
+ 		not (AgentPHATEvent( ! isFailure() || isSuccess(), getElapsedTime()>$ae.getElapsedTime(), $ae.getId().equals(getId())))
+ 		// there is no posterior action performed by the user that it is a failure
+ 		not (ActionPerformed($ae.getId().equals(getResponsible()),getTime()>$ae.getElapsedTime(),isFailureAction()))		
+	then
+		insertLogical( new GoingToFail($ae.getId() , $ae.getScope(),$ae.getElapsedTime())) ;
+end
+
