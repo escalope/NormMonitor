@@ -136,7 +136,7 @@ public class TestBasicNorm {
 		
 		
 		KieSession ksession = getSession("src/test/resources/Norms.drl");
-			ksession.insert(new Assisting("AndroidTVRemote1","E3Patient","TV"));
+			ksession.insert(new Assisting("AndroidTVRemote1","E3Patient","TV",100));
 		ksession.fireAllRules();
 		checkInstancesCount(ksession,ToleratedFailure.class,0);
 		checkInstancesCount(ksession,Action.class,0);
