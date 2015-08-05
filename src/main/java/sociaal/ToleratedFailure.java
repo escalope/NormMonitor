@@ -37,10 +37,10 @@ public class ToleratedFailure extends PunishmentNorm {
 	}
 
 	@Override
-	public boolean shouldPunish(long millis) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean shouldPunish(long currentSimtime) {
+		return (currentSimtime-getTime())%3==0 && currentSimtime>getTime(); // every three seconds since violation time
 	}
+
 
 	   public String toString(){
 		   return "ToleratedFailure("+this.getName()+","+this.getResponsible()+")";
