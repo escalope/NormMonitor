@@ -368,6 +368,7 @@ public class NormativeSystem extends ToolAgent {
 		KnowledgeBuilder kbuilder = KnowledgeBuilderFactory
 				.newKnowledgeBuilder();
 		String ruleFile = "target/generated/rules.drl";
+		String ddrulesFile = "src/main/resources/DomainDependentRules.drl";
 
 		KieServices kServices = KieServices.Factory.get();
 
@@ -375,11 +376,22 @@ public class NormativeSystem extends ToolAgent {
 		try {
 			fis = new FileInputStream(ruleFile);
 
-			kbuilder.add(ResourceFactory.newInputStreamResource(fis),
+			if (new File(ruleFile).exists())
+				kbuilder.add(ResourceFactory.newInputStreamResource(fis),
+						ResourceType.DRL);
+
+			kbuilder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream("/DomainIndependentRules.drl")),
 					ResourceType.DRL);
+
+			if (new File(ddrulesFile).exists())
+				kbuilder.add(ResourceFactory.newInputStreamResource(new FileInputStream(ddrulesFile)),
+						ResourceType.DRL);
+
+
 			System.out.println("Loading file: " + ruleFile);
 			ksession = kbuilder.newKnowledgeBase().newKieSession();
-			KieRuntimeLogger logger = KieServices.Factory.get().getLoggers().newConsoleLogger(ksession);
+			// debug information
+			//KieRuntimeLogger logger = KieServices.Factory.get().getLoggers().newConsoleLogger(ksession);
 			NormPerformanceDisplay.getInstance().setShowWorkSpaceHandler(
 					new java.awt.event.ActionListener() {
 						// by Paul Vargas from http://stackoverflow.com/questions/17627431/auto-resizing-the-jtable-column-widths
@@ -544,7 +556,7 @@ public class NormativeSystem extends ToolAgent {
 							while (!mqueue.isEmpty()) {
 								jade.lang.acl.ACLMessage mes = mqueue.poll();
 								mes.setPostTimeStamp();
-								//System.out.println("---->message:" + mes);
+								System.out.println("---->message:" + mes);
 								ksession.insert(mes);
 							}
 							//ksession.fireAllRules();
