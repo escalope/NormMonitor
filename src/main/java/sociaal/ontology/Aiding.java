@@ -31,7 +31,8 @@ public class Aiding extends BasicFact {
 	public String getAidee() {
 		return aidee;
 	}
-	public Aiding(String assisted,String assisting) {
+	public Aiding(String assisted,String assisting, long time) {
+		super(time);
 		this.aidee=assisting;
 		this.aided=assisted;
 	}

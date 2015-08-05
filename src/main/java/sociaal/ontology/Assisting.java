@@ -32,12 +32,14 @@ public class Assisting extends BasicFact {
 	public String getAssisting() {
 		return assisting;
 	}
-	public Assisting(String assisted,String assisting) {
+	public Assisting(String assisted,String assisting, long time) {
+		super(time);
 		this.assisted=assisted;
 		this.assisting=assisting;
 	}
 	
-	public Assisting(String assisting,String assisted, String scope) {
+	public Assisting(String assisting,String assisted, String scope, long time) {
+		super(time);
 		this.assisted=assisted;
 		this.assisting=assisting;
 		this.scope=scope;

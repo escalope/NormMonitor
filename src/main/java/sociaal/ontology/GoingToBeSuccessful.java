@@ -26,7 +26,8 @@ public class GoingToBeSuccessful extends BasicFact {
 	private String subject;
 	private String scope; 
 
-	public GoingToBeSuccessful(String subject,String scope) {
+	public GoingToBeSuccessful(String subject,String scope, long time) {
+		super(time);
 		this.subject=subject;
 		this.scope=scope;
 	}
@@ -34,7 +35,7 @@ public class GoingToBeSuccessful extends BasicFact {
 	@Override
 	public int hashCode() {
 		// TODO Auto-generated method stub
-		return (subject+scope).hashCode();
+		return (subject+scope+getTime()).hashCode();
 	}
 
 	public String getSubject() {
@@ -56,7 +57,7 @@ public class GoingToBeSuccessful extends BasicFact {
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof GoingToBeSuccessful){
-			return  ((GoingToBeSuccessful)obj).getSubject().equals(getSubject()) && ((GoingToBeSuccessful)obj).getScope().equals(getScope());
+			return  ((GoingToBeSuccessful)obj).getSubject().equals(getSubject()) && ((GoingToBeSuccessful)obj).getScope().equals(getScope()) && getTime()==((GoingToBeSuccessful)obj).getTime();
 		}
 		return false;
 	}

@@ -56,7 +56,8 @@ public class Action extends BasicFact {
 		this.scope = scope;
 	}
 
-	public Action(String responsible,String content,String scope) {
+	public Action(String responsible,String content,String scope, long time) {
+		super(time);
 		this.responsible=responsible;
 		this.content=content;
 		this.scope=scope;

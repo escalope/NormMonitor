@@ -26,7 +26,8 @@ public class GoingToFail extends BasicFact {
 	private String subject;
 	private String scope; 
 
-	public GoingToFail(String subject,String scope) {
+	public GoingToFail(String subject,String scope, long time) {
+		super(time);
 		this.subject=subject;
 		this.scope=scope;
 	}
@@ -51,13 +52,13 @@ public class GoingToFail extends BasicFact {
 	@Override
 	public int hashCode() {
 		// TODO Auto-generated method stub
-		return (subject+scope).hashCode();
+		return (subject+scope+getTime()).hashCode();
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof GoingToFail){
-			return  ((GoingToFail)obj).getSubject().equals(getSubject()) && ((GoingToFail)obj).getScope().equals(getScope());
+			return  ((GoingToFail)obj).getSubject().equals(getSubject()) && ((GoingToFail)obj).getScope().equals(getScope()) && ((GoingToFail)obj).getTime()==getTime();
 		}
 		return false;
 	}
