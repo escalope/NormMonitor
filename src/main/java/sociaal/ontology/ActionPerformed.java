@@ -29,9 +29,19 @@ public class ActionPerformed extends BasicFact {
 
 	private String responsible="";
 	private String actionType="";
+	private String scope="none";
+	private boolean successAction=false;
+	private boolean failureAction=false;
 
 
 	
+	public boolean isSuccessAction(){
+		return successAction;
+	}
+	
+	public boolean isFailureAction(){
+		return failureAction;
+	}
 	
 	public String getActionType() {
 		return actionType;
@@ -59,10 +69,38 @@ public class ActionPerformed extends BasicFact {
 		this.actionType=actionType;
 	}
 	
+	public ActionPerformed(String responsible,String actionType, long time,boolean isSuccessAction, boolean isFailureAction) {
+		super(time);
+		this.responsible=responsible;
+		if (actionType!=null)
+		this.actionType=actionType;
+		this.successAction=isSuccessAction;
+		this.failureAction=isFailureAction;
+	}
+	
+	
+	public ActionPerformed(String responsible,String actionType, String scope, long time) {
+		super(time);
+		this.responsible=responsible;
+		if (actionType!=null)
+		this.actionType=actionType;
+		this.scope=scope;
+	}
+	
+	public ActionPerformed(String responsible,String actionType, String scope, long time, boolean isSuccessAction, boolean isFailureAction) {
+		super(time);
+		this.responsible=responsible;
+		if (actionType!=null)
+		this.actionType=actionType;
+		this.scope=scope;
+		this.successAction=isSuccessAction;
+		this.failureAction=isFailureAction;
+	}
+	
 	@Override
 	public int hashCode() {
 		// TODO Auto-generated method stub
-		return (responsible+":"+actionType+":"+time).hashCode();
+		return (responsible+":"+actionType+":"+scope+":"+time).hashCode();
 	}
 
 	@Override
@@ -70,12 +108,16 @@ public class ActionPerformed extends BasicFact {
 		if (obj instanceof ActionPerformed){
 			boolean part1=((ActionPerformed)obj).getResponsible().equals(responsible) ;
 			boolean part2=((ActionPerformed)obj).getActionType().equals(actionType) ;
-			return  part1&&part2 &&	((ActionPerformed)obj).getTime()==getTime();
+			return  part1&&part2 &&	((ActionPerformed)obj).getTime()==getTime() &&((ActionPerformed)obj).getScope().equals(getScope());
 		}
 		return false;
 	}
 
+	public String getScope() {
+		return scope;
+	}
+
 	public String toString(){
-		return "ActionPerformed("+this.getResponsible()+", "+this.getActionType()+","+(this.getTime())+")";
+		return "ActionPerformed("+this.getResponsible()+", "+this.getActionType()+","+scope+","+(this.getTime())+", successAct:"+successAction+",failureAct:"+failureAction+")";
 	}
 }
