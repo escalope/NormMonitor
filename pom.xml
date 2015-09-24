@@ -9,7 +9,7 @@
 	<groupId>net.sf.phat</groupId>
 	<artifactId>normmonitor</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<name>Normative monitor</name>
 	<description>A drools based normative monitoring system for observing PHAT actors behavior</description>
 	<url>http://grasia.fdi.ucm.es/sociaal</url>
