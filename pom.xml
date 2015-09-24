@@ -12,22 +12,21 @@
 	<packaging>jar</packaging>
 	<version>1.0.0-SNAPSHOT</version>
 	<name>Normative monitor</name>
-	<description>A set of tools to model and simulate activities of daily living</description>
+	<description>A drools based normative monitoring system for observing PHAT actors behavior</description>
 	<url>http://grasia.fdi.ucm.es/sociaal</url>
 
 	<properties>
 		<vendor>GRASIA Research Group</vendor>
-		<!-- maven does not allow to refer to developers property defined at the 
-			beginning -->
-		<!-- an echoproperties task shows there is no accesible project.developers 
-			property -->
 		<developername>Jorge J. Gomez Sanz</developername>
 		<developeremail>jjgomez@ucm.es</developeremail>
-		<!-- begin: izpack configuration -->
-		<sociaalml.version>1.0.3-SNAPSHOT</sociaalml.version>
-		<phat.version>1.0.2-SNAPSHOT</phat.version>
-		<!-- end: izpack configuration -->
+		<sociaalml.version>1.0.3</sociaalml.version>
+		<phat.version>1.0.3</phat.version>
 	</properties>
+ <scm>
+        <connection>scm:git:git://github.com/escalope/NormMonitor.git</connection>
+        <developerConnection>scm:git:git@github.com:escalope/NormMonitor.git</developerConnection>
+        <url>https://github.com/escalope/NormMonitor</url>		
+    </scm>
 
 	<licenses>
 		<license>
@@ -44,13 +43,6 @@
 		</developer>
 	</developers>
 
-	<repositories>
-		<repository>
-			<id>tilab</id>
-			<url>http://jade.tilab.com/maven/</url>
-		</repository>
-	</repositories>
-
 	<dependencies>
 		<dependency>
 			<groupId>net.sf.phat</groupId>
@@ -63,9 +55,9 @@
 			<version>1.5</version>
 		</dependency>
 		<dependency>
-			<groupId>com.tilab.jade</groupId>
+			<groupId>net.sf.ingenias</groupId>
 			<artifactId>jade</artifactId>
-			<version>4.3.3</version>
+			<version>4.3</version>
 		</dependency>
 		<dependency>
 			<groupId>net.sf.sociaal</groupId>
