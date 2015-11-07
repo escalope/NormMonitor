@@ -5,13 +5,23 @@ NormMonitor requires having a PHAT project to work on. The pom.xml file of the P
 		<dependency>
                   <groupId>net.sf.sociaal</groupId>
                   <artifactId>normmonitor</artifactId>
-                  <version>1.0.0-SNAPSHOT</version>
+                  <version>1.0.1-SNAPSHOT</version>
                 </dependency>
+
+to work with the latest SNAPSHOT or
+
+		<dependency>
+                  <groupId>net.sf.sociaal</groupId>
+                  <artifactId>normmonitor</artifactId>
+                  <version>1.0.0</version>
+                </dependency>
+
+To work with the latest stable version.
 
 Also, the PHAT version and the SociAALML must match those of the PHAT project
 
-		<sociaalml.version>1.0.3-SNAPSHOT</sociaalml.version>
-		<phat.version>1.0.2-SNAPSHOT</phat.version>
+		<sociaalml.version>1.0.5</sociaalml.version>
+		<phat.version>1.0.7</phat.version>
 
 To learn to use PHAT,please check the tutorial at http://grasia.fdi.ucm.es/sociaal
 

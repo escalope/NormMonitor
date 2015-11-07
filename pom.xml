@@ -18,8 +18,8 @@
 		<vendor>GRASIA Research Group</vendor>
 		<developername>Jorge J. Gomez Sanz</developername>
 		<developeremail>jjgomez@ucm.es</developeremail>
-		<sociaalml.version>1.0.3</sociaalml.version>
-		<phat.version>1.0.3</phat.version>
+		<sociaalml.version>1.0.5</sociaalml.version>
+		<phat.version>1.0.7</phat.version>
 	</properties>
  <scm>
         <connection>scm:git:git://github.com/escalope/NormMonitor.git</connection>
